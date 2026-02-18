@@ -1,7 +1,7 @@
 import json
 from typing import Dict, Optional
 
-from confluent_kafka import Consumer, Producer
+from confluent_kafka import Consumer, Message, Producer
 
 
 def error_callback(err):
@@ -49,7 +49,6 @@ class KafkaConsumer:
             'auto.offset.reset': 'earliest',
             'enable.auto.commit': False,
             'error_cb': error_callback,
-            'debug': 'all',
             'client.id': 'someclientkey'
         }
 
@@ -57,11 +56,34 @@ class KafkaConsumer:
         self.c = Consumer(params)
         self.c.subscribe([topic])
 
-    def consume(self, timeout: float = 3.0) -> Optional[Dict]:
+    def _poll(self, timeout: float = 3.0) -> Optional[Message]:
         msg = self.c.poll(timeout=timeout)
         if not msg:
             return None
         if msg.error():
             raise Exception(msg.error())
+        return msg
+
+    @staticmethod
+    def _decode(msg: Message) -> Dict:
         val = msg.value().decode()
         return json.loads(val)
+
+    def consume(self, timeout: float = 3.0) -> Optional[Dict]:
+        msg = self._poll(timeout=timeout)
+        if msg is None:
+            return None
+        return self._decode(msg)
+
+    def consume_raw(self, timeout: float = 3.0) -> Optional[Message]:
+        return self._poll(timeout=timeout)
+
+    def decode(self, msg: Message) -> Dict:
+        return self._decode(msg)
+
+    def commit(self, msg: Message) -> None:
+        # Synchronous commit: we only advance offsets after successful processing.
+        self.c.commit(message=msg, asynchronous=False)
+
+    def close(self) -> None:
+        self.c.close()

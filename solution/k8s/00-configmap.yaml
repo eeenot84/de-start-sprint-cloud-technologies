@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sprint9-dwh-config
+data:
+  # Kafka
+  KAFKA_HOST: "rc1a-bc1i5jqnsso7cq1j.mdb.yandexcloud.net"
+  KAFKA_PORT: "9091"
+  # Consumer groups are set per-service in Deployments.
+  KAFKA_CONSUMER_GROUP: "stg-service"
+
+  # Topics
+  # DDS consumes from STG topic, produces into DDS topic.
+  KAFKA_STG_SERVICE_ORDERS_TOPIC: "stg-service-orders"
+  KAFKA_DDS_SERVICE_ORDERS_TOPIC: "dds-service-orders"
+
+  # Postgres
+  PG_WAREHOUSE_HOST: "rc1b-sjqdi7cqafk6e3vh.mdb.yandexcloud.net"
+  PG_WAREHOUSE_PORT: "6432"
+  PG_WAREHOUSE_DBNAME: "sprint9dwh"
+  PG_WAREHOUSE_USER: "db_user"
+

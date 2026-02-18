@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdm-service
+  labels:
+    app: cdm-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdm-service
+  template:
+    metadata:
+      labels:
+        app: cdm-service
+    spec:
+      containers:
+        - name: cdm-service
+          # TODO: set your image in Container Registry
+          image: cr.yandex/crpj432mugle66u5vj6k/test/cdm-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: KAFKA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: sprint9-dwh-config
+                  key: KAFKA_HOST
+            - name: KAFKA_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: sprint9-dwh-config
+                  key: KAFKA_PORT
+            - name: KAFKA_CONSUMER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: sprint9-dwh-secrets
+                  key: KAFKA_CONSUMER_USERNAME
+            - name: KAFKA_CONSUMER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sprint9-dwh-secrets
+                  key: KAFKA_CONSUMER_PASSWORD
+            - name: KAFKA_CONSUMER_GROUP
+              value: "cdm-service"
+            - name: KAFKA_SOURCE_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: sprint9-dwh-config
+                  key: KAFKA_DDS_SERVICE_ORDERS_TOPIC
+            - name: PG_WAREHOUSE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: sprint9-dwh-config
+                  key: PG_WAREHOUSE_HOST
+            - name: PG_WAREHOUSE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: sprint9-dwh-config
+                  key: PG_WAREHOUSE_PORT
+            - name: PG_WAREHOUSE_DBNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: sprint9-dwh-config
+                  key: PG_WAREHOUSE_DBNAME
+            - name: PG_WAREHOUSE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: sprint9-dwh-config
+                  key: PG_WAREHOUSE_USER
+            - name: PG_WAREHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sprint9-dwh-secrets
+                  key: PG_WAREHOUSE_PASSWORD
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 20
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cdm-service
+spec:
+  selector:
+    app: cdm-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+
