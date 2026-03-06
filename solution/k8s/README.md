@@ -10,7 +10,18 @@
 kubectl create namespace sprint9 --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-2) Создайте `Secret` c переменными окружения (пример ниже). **Не коммитьте** значения.
+2) Создайте `Secret` c переменными окружения. **Не коммитьте** значения.
+
+Вариант A (рекомендуется): создать секрет командой:
+
+```bash
+kubectl -n sprint9 create secret generic sprint9-dwh-secrets \
+  --from-literal=KAFKA_CONSUMER_USERNAME="..." \
+  --from-literal=KAFKA_CONSUMER_PASSWORD="..." \
+  --from-literal=PG_WAREHOUSE_PASSWORD="..."
+```
+
+Вариант B: используйте `01-secrets.yaml` как **шаблон** (значения храните локально).
 
 3) Примените манифесты:
 
